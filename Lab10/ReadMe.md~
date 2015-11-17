@@ -1,0 +1,20 @@
+To : Prof. Renu
+From : Tushar Jain, B13236
+Subject: Lab-10
+Date: 17 November 2015
+
+###Our tasks :
+## QPSK by direct mapping 
+1. Observe what happens to the signal constellation as you vary the noise in the channel and the cutoff frequency of the filter.
+2. Observe the effects of inter symbol interference (ISI) and why is it caused?
+## QPSK modulator
+1. Model PSK mod with packet encoder & decoder with an AWGN channel and see how the performance is affected by noise.
+
+###Lab Members:
+Concepts were discussed with following persons:
+1. Guntuku Vikas, B13212
+2. Prof. Renu R
+
+###Observations:
+1. 
+

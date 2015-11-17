@@ -2,7 +2,7 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: Top Block
-# Generated: Tue Nov 17 14:09:08 2015
+# Generated: Tue Nov 17 14:47:23 2015
 ##################################################
 
 if __name__ == '__main__':
@@ -20,13 +20,14 @@ from gnuradio import analog
 from gnuradio import blocks
 from gnuradio import digital
 from gnuradio import eng_notation
+from gnuradio import filter
 from gnuradio import gr
 from gnuradio import qtgui
 from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from gnuradio.qtgui import Range, RangeWidget
-from grc_gnuradio import blks2 as grc_blks2
 from optparse import OptionParser
+import numpy
 import sip
 import sys
 
@@ -59,16 +60,20 @@ class top_block(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 32000
+        self.samp_rate = samp_rate = 100000
         self.noise_level = noise_level = 0
+        self.cutoff_freq = cutoff_freq = 50000
 
         ##################################################
         # Blocks
         ##################################################
-        self._noise_level_range = Range(0, 2, 0.01, 0, 200)
+        self._noise_level_range = Range(0, 1, 0.01, 0, 200)
         self._noise_level_win = RangeWidget(self._noise_level_range, self.set_noise_level, "noise_level", "counter_slider", float)
         self.top_layout.addWidget(self._noise_level_win)
-        self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
+        self._cutoff_freq_range = Range(0, 100000, 1000, 50000, 200)
+        self._cutoff_freq_win = RangeWidget(self._cutoff_freq_range, self.set_cutoff_freq, "cutoff_freq", "counter_slider", float)
+        self.top_layout.addWidget(self._cutoff_freq_win)
+        self.qtgui_time_sink_x_0 = qtgui.time_sink_c(
         	1024, #size
         	samp_rate, #samp_rate
         	"", #name
@@ -101,9 +106,12 @@ class top_block(gr.top_block, Qt.QWidget):
         alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
                   1.0, 1.0, 1.0, 1.0, 1.0]
         
-        for i in xrange(1):
+        for i in xrange(2*1):
             if len(labels[i]) == 0:
-                self.qtgui_time_sink_x_0.set_line_label(i, "Data {0}".format(i))
+                if(i % 2 == 0):
+                    self.qtgui_time_sink_x_0.set_line_label(i, "Re{{Data {0}}}".format(i/2))
+                else:
+                    self.qtgui_time_sink_x_0.set_line_label(i, "Im{{Data {0}}}".format(i/2))
             else:
                 self.qtgui_time_sink_x_0.set_line_label(i, labels[i])
             self.qtgui_time_sink_x_0.set_line_width(i, widths[i])
@@ -154,56 +162,24 @@ class top_block(gr.top_block, Qt.QWidget):
         
         self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.pyqwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_const_sink_x_0_win)
-        self.digital_psk_mod_0 = digital.psk.psk_mod(
-          constellation_points=4,
-          mod_code="gray",
-          differential=True,
-          samples_per_symbol=4,
-          excess_bw=0.35,
-          verbose=False,
-          log=False,
-          )
-        self.digital_psk_demod_0 = digital.psk.psk_demod(
-          constellation_points=4,
-          differential=True,
-          samples_per_symbol=4,
-          excess_bw=0.35,
-          phase_bw=6.28/100.0,
-          timing_bw=6.28/100.0,
-          mod_code="gray",
-          verbose=False,
-          log=False,
-          )
+        self.low_pass_filter_0 = filter.fir_filter_ccf(1, firdes.low_pass(
+        	1, samp_rate, cutoff_freq, 1000, firdes.WIN_HAMMING, 6.76))
+        self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bc(((complex(1,1),complex(1,-1),complex(-1,1),complex(-1,-1))), 1)
+        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
         self.blocks_add_xx_0 = blocks.add_vcc(1)
-        self.blks2_packet_encoder_0 = grc_blks2.packet_mod_f(grc_blks2.packet_encoder(
-        		samples_per_symbol=4,
-        		bits_per_symbol=2,
-        		preamble="",
-        		access_code="",
-        		pad_for_usrp=True,
-        	),
-        	payload_length=0,
-        )
-        self.blks2_packet_decoder_1 = grc_blks2.packet_demod_f(grc_blks2.packet_decoder(
-        		access_code="",
-        		threshold=-1,
-        		callback=lambda ok, payload: self.blks2_packet_decoder_1.recv_pkt(ok, payload),
-        	),
-        )
-        self.analog_sig_source_x_0 = analog.sig_source_f(samp_rate, analog.GR_COS_WAVE, 1000, 1, 0)
+        self.analog_random_source_x_0 = blocks.vector_source_b(map(int, numpy.random.randint(0, 4, 1000)), True)
         self.Gausssion = analog.noise_source_c(analog.GR_GAUSSIAN, noise_level, 0)
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.Gausssion, 0), (self.blocks_add_xx_0, 1))    
-        self.connect((self.analog_sig_source_x_0, 0), (self.blks2_packet_encoder_0, 0))    
-        self.connect((self.blks2_packet_decoder_1, 0), (self.qtgui_time_sink_x_0, 0))    
-        self.connect((self.blks2_packet_encoder_0, 0), (self.digital_psk_mod_0, 0))    
-        self.connect((self.blocks_add_xx_0, 0), (self.digital_psk_demod_0, 0))    
-        self.connect((self.digital_psk_demod_0, 0), (self.blks2_packet_decoder_1, 0))    
-        self.connect((self.digital_psk_mod_0, 0), (self.blocks_add_xx_0, 0))    
-        self.connect((self.digital_psk_mod_0, 0), (self.qtgui_const_sink_x_0, 0))    
+        self.connect((self.Gausssion, 0), (self.blocks_add_xx_0, 0))    
+        self.connect((self.analog_random_source_x_0, 0), (self.digital_chunks_to_symbols_xx_0, 0))    
+        self.connect((self.blocks_add_xx_0, 0), (self.low_pass_filter_0, 0))    
+        self.connect((self.blocks_throttle_0, 0), (self.qtgui_const_sink_x_0, 0))    
+        self.connect((self.blocks_throttle_0, 0), (self.qtgui_time_sink_x_0, 0))    
+        self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_add_xx_0, 1))    
+        self.connect((self.low_pass_filter_0, 0), (self.blocks_throttle_0, 0))    
 
     def closeEvent(self, event):
         self.settings = Qt.QSettings("GNU Radio", "top_block")
@@ -215,7 +191,8 @@ class top_block(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
+        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
+        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, self.cutoff_freq, 1000, firdes.WIN_HAMMING, 6.76))
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
 
     def get_noise_level(self):
@@ -224,6 +201,13 @@ class top_block(gr.top_block, Qt.QWidget):
     def set_noise_level(self, noise_level):
         self.noise_level = noise_level
         self.Gausssion.set_amplitude(self.noise_level)
+
+    def get_cutoff_freq(self):
+        return self.cutoff_freq
+
+    def set_cutoff_freq(self, cutoff_freq):
+        self.cutoff_freq = cutoff_freq
+        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, self.cutoff_freq, 1000, firdes.WIN_HAMMING, 6.76))
 
 
 if __name__ == '__main__':
