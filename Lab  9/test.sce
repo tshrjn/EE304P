@@ -19,8 +19,8 @@ func=x_i(n)*sin(2*3.1416*50*x);
 [r,c]=size(func);
 y=zeros(r,c);
 yprime=zeros(r,c);
-yprime(1)=0;
-y(1)=0;
+//yprime(1)=0;
+//y(1)=0;
 xrecon=zeros(r,c);
 
 func(1)=0;

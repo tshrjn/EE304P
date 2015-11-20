@@ -1,13 +1,13 @@
 function xq = quantize ( x , b ,mx,mn)
 
-//levels
+//      Levels
  l = 2ˆb;
 
-// StepSize
+//      StepSize or delta
  s=(mx−mn) / l;
 
 // Quantization levels
- ql =[mn: s :mx ] ;
+ ql = [mn: s :mx ] ;
 
 // Decision Levels
  dl =[mn+( s /2 ) : s :mx];
@@ -32,4 +32,4 @@ function xq = quantize ( x , b ,mx,mn)
 	index = index +1;
  end
 
- endfunction
+ end function

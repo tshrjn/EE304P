@@ -1,36 +1,24 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 ##################################################
-# GNU Radio Python Flow Graph
+# Gnuradio Python Flow Graph
 # Title: Top Block
-# Generated: Tue Nov 17 14:47:23 2015
+# Generated: Fri Nov 20 11:54:47 2015
 ##################################################
-
-if __name__ == '__main__':
-    import ctypes
-    import sys
-    if sys.platform.startswith('linux'):
-        try:
-            x11 = ctypes.cdll.LoadLibrary('libX11.so')
-            x11.XInitThreads()
-        except:
-            print "Warning: failed to XInitThreads()"
 
 from PyQt4 import Qt
 from gnuradio import analog
 from gnuradio import blocks
 from gnuradio import digital
 from gnuradio import eng_notation
-from gnuradio import filter
 from gnuradio import gr
 from gnuradio import qtgui
 from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
-from gnuradio.qtgui import Range, RangeWidget
+from grc_gnuradio import blks2 as grc_blks2
 from optparse import OptionParser
-import numpy
+import PyQt4.Qwt5 as Qwt
 import sip
 import sys
-
 
 class top_block(gr.top_block, Qt.QWidget):
 
@@ -57,23 +45,34 @@ class top_block(gr.top_block, Qt.QWidget):
         self.settings = Qt.QSettings("GNU Radio", "top_block")
         self.restoreGeometry(self.settings.value("geometry").toByteArray())
 
+
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 100000
+        self.samp_rate = samp_rate = 32000
         self.noise_level = noise_level = 0
-        self.cutoff_freq = cutoff_freq = 50000
 
         ##################################################
         # Blocks
         ##################################################
-        self._noise_level_range = Range(0, 1, 0.01, 0, 200)
-        self._noise_level_win = RangeWidget(self._noise_level_range, self.set_noise_level, "noise_level", "counter_slider", float)
-        self.top_layout.addWidget(self._noise_level_win)
-        self._cutoff_freq_range = Range(0, 100000, 1000, 50000, 200)
-        self._cutoff_freq_win = RangeWidget(self._cutoff_freq_range, self.set_cutoff_freq, "cutoff_freq", "counter_slider", float)
-        self.top_layout.addWidget(self._cutoff_freq_win)
-        self.qtgui_time_sink_x_0 = qtgui.time_sink_c(
+        self._noise_level_layout = Qt.QVBoxLayout()
+        self._noise_level_tool_bar = Qt.QToolBar(self)
+        self._noise_level_layout.addWidget(self._noise_level_tool_bar)
+        self._noise_level_tool_bar.addWidget(Qt.QLabel("noise_level"+": "))
+        self._noise_level_counter = Qwt.QwtCounter()
+        self._noise_level_counter.setRange(0, 2, 0.01)
+        self._noise_level_counter.setNumButtons(2)
+        self._noise_level_counter.setValue(self.noise_level)
+        self._noise_level_tool_bar.addWidget(self._noise_level_counter)
+        self._noise_level_counter.valueChanged.connect(self.set_noise_level)
+        self._noise_level_slider = Qwt.QwtSlider(None, Qt.Qt.Horizontal, Qwt.QwtSlider.BottomScale, Qwt.QwtSlider.BgSlot)
+        self._noise_level_slider.setRange(0, 2, 0.01)
+        self._noise_level_slider.setValue(self.noise_level)
+        self._noise_level_slider.setMinimumWidth(200)
+        self._noise_level_slider.valueChanged.connect(self.set_noise_level)
+        self._noise_level_layout.addWidget(self._noise_level_slider)
+        self.top_layout.addLayout(self._noise_level_layout)
+        self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
         	1024, #size
         	samp_rate, #samp_rate
         	"", #name
@@ -81,45 +80,8 @@ class top_block(gr.top_block, Qt.QWidget):
         )
         self.qtgui_time_sink_x_0.set_update_time(0.10)
         self.qtgui_time_sink_x_0.set_y_axis(-1, 1)
-        
-        self.qtgui_time_sink_x_0.set_y_label("Amplitude", "")
-        
         self.qtgui_time_sink_x_0.enable_tags(-1, True)
         self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
-        self.qtgui_time_sink_x_0.enable_autoscale(False)
-        self.qtgui_time_sink_x_0.enable_grid(False)
-        self.qtgui_time_sink_x_0.enable_control_panel(False)
-        
-        if not True:
-          self.qtgui_time_sink_x_0.disable_legend()
-        
-        labels = ["", "", "", "", "",
-                  "", "", "", "", ""]
-        widths = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
-        colors = ["blue", "red", "green", "black", "cyan",
-                  "magenta", "yellow", "dark red", "dark green", "blue"]
-        styles = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
-        markers = [-1, -1, -1, -1, -1,
-                   -1, -1, -1, -1, -1]
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-                  1.0, 1.0, 1.0, 1.0, 1.0]
-        
-        for i in xrange(2*1):
-            if len(labels[i]) == 0:
-                if(i % 2 == 0):
-                    self.qtgui_time_sink_x_0.set_line_label(i, "Re{{Data {0}}}".format(i/2))
-                else:
-                    self.qtgui_time_sink_x_0.set_line_label(i, "Im{{Data {0}}}".format(i/2))
-            else:
-                self.qtgui_time_sink_x_0.set_line_label(i, labels[i])
-            self.qtgui_time_sink_x_0.set_line_width(i, widths[i])
-            self.qtgui_time_sink_x_0.set_line_color(i, colors[i])
-            self.qtgui_time_sink_x_0.set_line_style(i, styles[i])
-            self.qtgui_time_sink_x_0.set_line_marker(i, markers[i])
-            self.qtgui_time_sink_x_0.set_line_alpha(i, alphas[i])
-        
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.pyqwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
         self.qtgui_const_sink_x_0 = qtgui.const_sink_c(
@@ -130,57 +92,61 @@ class top_block(gr.top_block, Qt.QWidget):
         self.qtgui_const_sink_x_0.set_update_time(0.10)
         self.qtgui_const_sink_x_0.set_y_axis(-2, 2)
         self.qtgui_const_sink_x_0.set_x_axis(-2, 2)
-        self.qtgui_const_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
-        self.qtgui_const_sink_x_0.enable_autoscale(False)
-        self.qtgui_const_sink_x_0.enable_grid(False)
-        
-        if not True:
-          self.qtgui_const_sink_x_0.disable_legend()
-        
-        labels = ["", "", "", "", "",
-                  "", "", "", "", ""]
-        widths = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
-        colors = ["blue", "red", "red", "red", "red",
-                  "red", "red", "red", "red", "red"]
-        styles = [0, 0, 0, 0, 0,
-                  0, 0, 0, 0, 0]
-        markers = [0, 0, 0, 0, 0,
-                   0, 0, 0, 0, 0]
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-                  1.0, 1.0, 1.0, 1.0, 1.0]
-        for i in xrange(1):
-            if len(labels[i]) == 0:
-                self.qtgui_const_sink_x_0.set_line_label(i, "Data {0}".format(i))
-            else:
-                self.qtgui_const_sink_x_0.set_line_label(i, labels[i])
-            self.qtgui_const_sink_x_0.set_line_width(i, widths[i])
-            self.qtgui_const_sink_x_0.set_line_color(i, colors[i])
-            self.qtgui_const_sink_x_0.set_line_style(i, styles[i])
-            self.qtgui_const_sink_x_0.set_line_marker(i, markers[i])
-            self.qtgui_const_sink_x_0.set_line_alpha(i, alphas[i])
-        
         self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.pyqwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_const_sink_x_0_win)
-        self.low_pass_filter_0 = filter.fir_filter_ccf(1, firdes.low_pass(
-        	1, samp_rate, cutoff_freq, 1000, firdes.WIN_HAMMING, 6.76))
-        self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bc(((complex(1,1),complex(1,-1),complex(-1,1),complex(-1,-1))), 1)
-        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
+        self.digital_psk_mod_0 = digital.psk.psk_mod(
+          constellation_points=4,
+          mod_code="gray",
+          differential=False,
+          samples_per_symbol=4,
+          excess_bw=0.35,
+          verbose=False,
+          log=False,
+          )
+        self.digital_psk_demod_0 = digital.psk.psk_demod(
+          constellation_points=4,
+          differential=False,
+          samples_per_symbol=4,
+          excess_bw=0.35,
+          phase_bw=6.28/100.0,
+          timing_bw=6.28/100.0,
+          mod_code="gray",
+          verbose=False,
+          log=False,
+          )
         self.blocks_add_xx_0 = blocks.add_vcc(1)
-        self.analog_random_source_x_0 = blocks.vector_source_b(map(int, numpy.random.randint(0, 4, 1000)), True)
+        self.blks2_packet_encoder_0 = grc_blks2.packet_mod_f(grc_blks2.packet_encoder(
+        		samples_per_symbol=4,
+        		bits_per_symbol=2,
+        		preamble="",
+        		access_code="",
+        		pad_for_usrp=True,
+        	),
+        	payload_length=0,
+        )
+        self.blks2_packet_decoder_1 = grc_blks2.packet_demod_f(grc_blks2.packet_decoder(
+        		access_code="",
+        		threshold=-1,
+        		callback=lambda ok, payload: self.blks2_packet_decoder_1.recv_pkt(ok, payload),
+        	),
+        )
+        self.analog_sig_source_x_0 = analog.sig_source_f(samp_rate, analog.GR_COS_WAVE, 1000, 1, 0)
         self.Gausssion = analog.noise_source_c(analog.GR_GAUSSIAN, noise_level, 0)
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.Gausssion, 0), (self.blocks_add_xx_0, 0))    
-        self.connect((self.analog_random_source_x_0, 0), (self.digital_chunks_to_symbols_xx_0, 0))    
-        self.connect((self.blocks_add_xx_0, 0), (self.low_pass_filter_0, 0))    
-        self.connect((self.blocks_throttle_0, 0), (self.qtgui_const_sink_x_0, 0))    
-        self.connect((self.blocks_throttle_0, 0), (self.qtgui_time_sink_x_0, 0))    
-        self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_add_xx_0, 1))    
-        self.connect((self.low_pass_filter_0, 0), (self.blocks_throttle_0, 0))    
+        self.connect((self.Gausssion, 0), (self.blocks_add_xx_0, 1))
+        self.connect((self.analog_sig_source_x_0, 0), (self.blks2_packet_encoder_0, 0))
+        self.connect((self.blks2_packet_decoder_1, 0), (self.qtgui_time_sink_x_0, 0))
+        self.connect((self.blks2_packet_encoder_0, 0), (self.digital_psk_mod_0, 0))
+        self.connect((self.blocks_add_xx_0, 0), (self.digital_psk_demod_0, 0))
+        self.connect((self.digital_psk_demod_0, 0), (self.blks2_packet_decoder_1, 0))
+        self.connect((self.digital_psk_mod_0, 0), (self.blocks_add_xx_0, 0))
+        self.connect((self.digital_psk_mod_0, 0), (self.qtgui_const_sink_x_0, 0))
 
+
+# QT sink close method reimplementation
     def closeEvent(self, event):
         self.settings = Qt.QSettings("GNU Radio", "top_block")
         self.settings.setValue("geometry", self.saveGeometry())
@@ -191,8 +157,7 @@ class top_block(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
-        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, self.cutoff_freq, 1000, firdes.WIN_HAMMING, 6.76))
+        self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
 
     def get_noise_level(self):
@@ -200,30 +165,29 @@ class top_block(gr.top_block, Qt.QWidget):
 
     def set_noise_level(self, noise_level):
         self.noise_level = noise_level
+        self._noise_level_counter.setValue(self.noise_level)
+        self._noise_level_slider.setValue(self.noise_level)
         self.Gausssion.set_amplitude(self.noise_level)
 
-    def get_cutoff_freq(self):
-        return self.cutoff_freq
-
-    def set_cutoff_freq(self, cutoff_freq):
-        self.cutoff_freq = cutoff_freq
-        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, self.cutoff_freq, 1000, firdes.WIN_HAMMING, 6.76))
-
-
 if __name__ == '__main__':
+    import ctypes
+    import os
+    if os.name == 'posix':
+        try:
+            x11 = ctypes.cdll.LoadLibrary('libX11.so')
+            x11.XInitThreads()
+        except:
+            print "Warning: failed to XInitThreads()"
     parser = OptionParser(option_class=eng_option, usage="%prog: [options]")
     (options, args) = parser.parse_args()
-    from distutils.version import StrictVersion
-    if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
-        Qt.QApplication.setGraphicsSystem(gr.prefs().get_string('qtgui','style','raster'))
     qapp = Qt.QApplication(sys.argv)
     tb = top_block()
     tb.start()
     tb.show()
-
     def quitting():
         tb.stop()
         tb.wait()
     qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
     qapp.exec_()
-    tb = None  # to clean up Qt widgets
+    tb = None #to clean up Qt widgets
+
